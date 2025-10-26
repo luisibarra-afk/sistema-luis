@@ -11,6 +11,7 @@
       font-family: Arial, sans-serif;
       background-color: #f4f4f9;
       margin: 0;
+      padding: 0;
     }
     header {
       background-color: #6b0f1a;
@@ -59,6 +60,16 @@
       color: #6b0f1a;
       border-top: 1px solid #ccc;
     }
+    /* Pantalla de login */
+    #login {
+      max-width: 400px;
+      margin: 100px auto;
+      background: white;
+      padding: 2em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -66,7 +77,18 @@
     <h1>Validación de Justificantes - CBTis No. 179</h1>
   </header>
 
-  <main>
+  <!-- Login -->
+  <div id="login">
+    <h2>Acceso restringido</h2>
+    <p>Ingrese las credenciales autorizadas</p>
+    <input type="text" id="user" placeholder="Usuario"><br><br>
+    <input type="password" id="pass" placeholder="Contraseña"><br><br>
+    <button onclick="login()">Entrar</button>
+    <p id="msg" style="color:red;"></p>
+  </div>
+
+  <!-- Formulario oculto -->
+  <main id="formContainer" style="display:none;">
     <form id="formJustificante">
       <label>Nombre del alumno:</label>
       <input type="text" id="nombre" required>
@@ -77,31 +99,27 @@
       <label>Especialidad:</label>
       <select id="especialidad" required>
         <option value="">Seleccione...</option>
-        <option value="Administración de Recursos Humanos">Administración de Recursos Humanos</option>
-        <option value="Trabajo Social">Trabajo Social</option>
-        <option value="Arquitectura">Arquitectura</option>
-        <option value="Programación">Programación</option>
-        <option value="Electricidad">Electricidad</option>
-        <option value="Mecatrónica">Mecatrónica</option>
-        <option value="Ciberseguridad">Ciberseguridad</option>
+        <option>Administración de Recursos Humanos</option>
+        <option>Trabajo Social</option>
+        <option>Arquitectura</option>
+        <option>Programación</option>
+        <option>Electricidad</option>
+        <option>Mecatrónica</option>
+        <option>Ciberseguridad</option>
       </select>
 
       <label>Semestre:</label>
       <select id="semestre" required>
         <option value="">Seleccione...</option>
-        <option value="1°">1°</option>
-        <option value="2°">2°</option>
-        <option value="3°">3°</option>
-        <option value="4°">4°</option>
-        <option value="5°">5°</option>
-        <option value="6°">6°</option>
+        <option>1°</option><option>2°</option><option>3°</option>
+        <option>4°</option><option>5°</option><option>6°</option>
       </select>
 
       <label>Turno:</label>
       <select id="turno" required>
         <option value="">Seleccione...</option>
-        <option value="Matutino">Matutino</option>
-        <option value="Vespertino">Vespertino</option>
+        <option>Matutino</option>
+        <option>Vespertino</option>
       </select>
 
       <label>Motivo del justificante:</label>
@@ -111,25 +129,25 @@
       <input type="text" id="fechas" placeholder="Ej. del 20 al 24 de octubre de 2025" required>
 
       <label>Persona a quien se entrega (nombre completo):</label>
-      <input type="text" id="nombreEntrega" placeholder="Nombre completo" required>
+      <input type="text" id="nombreEntrega" required>
 
-      <label>Parentesco con el alumno:</label>
+      <label>Parentesco:</label>
       <select id="tipoEntrega" required>
         <option value="">Seleccione...</option>
-        <option value="Madre">Madre</option>
-        <option value="Padre">Padre</option>
-        <option value="Tutor">Tutor</option>
+        <option>Madre</option>
+        <option>Padre</option>
+        <option>Tutor</option>
       </select>
 
-      <label>Número telefónico:</label>
+      <label>Teléfono:</label>
       <input type="tel" id="telefono" pattern="[0-9]{10}" placeholder="10 dígitos" required>
 
       <label>Validador:</label>
       <select id="validador" required>
         <option value="">Seleccione...</option>
-        <option value="Luis Eduardo Ibarra Hernández">Luis Eduardo Ibarra Hernández</option>
-        <option value="Ivonne Teresa Ortega Alfaro">Ivonne Teresa Ortega Alfaro</option>
-        <option value="María Butrón Venegas">María Butrón Venegas</option>
+        <option>Luis Eduardo Ibarra Hernández</option>
+        <option>Ivonne Teresa Ortega Alfaro</option>
+        <option>María Butrón Venegas</option>
       </select>
 
       <button type="button" onclick="generarPDF()">Generar PDF y Registrar</button>
@@ -137,59 +155,67 @@
   </main>
 
   <footer>
-    © 2025 | Diseño con derechos de autor.<br>
-    Desarrollado por <strong>Luis Eduardo Ibarra Hernández</strong> — CBTis No. 179.
+    © 2025 | Diseño con derechos de autor. Desarrollado por <strong>Luis Eduardo Ibarra Hernández</strong> — CBTis No. 179.
   </footer>
 
   <div id="qrcode" style="display:none;"></div>
 
   <script>
+    // Credenciales únicas
+    const USER = "cbtis179";
+    const PASS = "justificante2025";
+
+    // Login
+    function login() {
+      const u = document.getElementById("user").value;
+      const p = document.getElementById("pass").value;
+      const msg = document.getElementById("msg");
+
+      if (u === USER && p === PASS) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("formContainer").style.display = "block";
+      } else {
+        msg.textContent = "Usuario o contraseña incorrectos.";
+      }
+    }
+
+    // URL de Google Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH86aNRhrdz-K2tCR-wmXXVTK-y2I-mpbj_nctG_R6Rl1DZig5eIdW-1E4IN8UibZo/exec";
 
     async function generarPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      const nombre = document.getElementById('nombre').value.trim();
-      const numero = document.getElementById('numero').value.trim();
+      const nombre = document.getElementById('nombre').value;
+      const numero = document.getElementById('numero').value;
       const especialidad = document.getElementById('especialidad').value;
       const semestre = document.getElementById('semestre').value;
       const turno = document.getElementById('turno').value;
-      const motivo = document.getElementById('motivo').value.trim();
-      const fechas = document.getElementById('fechas').value.trim();
-      const nombreEntrega = document.getElementById('nombreEntrega').value.trim();
+      const motivo = document.getElementById('motivo').value;
+      const fechas = document.getElementById('fechas').value;
+      const nombreEntrega = document.getElementById('nombreEntrega').value;
       const tipoEntrega = document.getElementById('tipoEntrega').value;
-      const telefono = document.getElementById('telefono').value.trim();
+      const telefono = document.getElementById('telefono').value;
       const validador = document.getElementById('validador').value;
 
-      if (!nombre || !numero || !especialidad || !semestre || !turno || !motivo || !fechas || !nombreEntrega || !tipoEntrega || !telefono || !validador) {
-        alert('Por favor complete todos los campos.');
-        return;
-      }
-
       const folio = "JUS-" + Math.floor(Math.random() * 1000000);
-      const textoQR = `CBTis 179\nFolio: ${folio}\nAlumno: ${nombre}\nControl: ${numero}`;
       const qrDiv = document.getElementById('qrcode');
       qrDiv.innerHTML = "";
-      new QRCode(qrDiv, { text: textoQR, width: 100, height: 100 });
+      new QRCode(qrDiv, { text: folio, width: 100, height: 100 });
       await new Promise(r => setTimeout(r, 500));
       const qrImg = qrDiv.querySelector('img').src;
 
-      // Encabezado
       const encabezado = new Image();
       encabezado.src = "encabezado.png";
       try { doc.addImage(encabezado, "PNG", 10, 5, 190, 25); } catch(e){}
 
-      // Título
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
       doc.text("JUSTIFICANTE ESCOLAR DIGITAL", 105, 40, { align: "center" });
 
-      // Subtítulo (datos académicos)
       doc.setFontSize(11);
       doc.text(`${especialidad} – ${semestre} Semestre – Turno ${turno}`, 105, 50, { align: "center" });
 
-      // Bloque de información
       let y = 65;
       doc.setFont("helvetica", "normal");
       doc.text(`Folio: ${folio}`, 25, y); y += 8;
@@ -201,13 +227,10 @@
       doc.text(`Teléfono: ${telefono}`, 25, y); y += 8;
       doc.text(`Validador: ${validador}`, 25, y); y += 8;
 
-      // QR a la derecha
       doc.addImage(qrImg, "PNG", 145, 65, 50, 50);
 
-      // Fecha
       doc.text(`Fecha de emisión: ${new Date().toLocaleDateString()}`, 25, y + 6);
 
-      // Firma y sello
       doc.setLineWidth(0.5);
       doc.line(25, 145, 90, 145);
       doc.text(validador, 25, 152);
@@ -222,49 +245,30 @@
       doc.setFontSize(9);
       doc.text("SELLO DE LA ESCUELA", 165, 195, { align: "center" });
 
-      // Leyenda institucional
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.text(
-        "El presente justificante tiene validez únicamente para efectos de control de asistencia.",
-        105, 215, { align: "center" }
-      );
-      doc.text(
-        "El cumplimiento académico y la entrega de actividades son responsabilidad exclusiva del alumno.",
-        105, 221, { align: "center" }
-      );
+      doc.text("El presente justificante tiene validez únicamente para efectos de control de asistencia.", 105, 215, { align: "center" });
+      doc.text("El cumplimiento académico y la entrega de actividades son responsabilidad exclusiva del alumno.", 105, 221, { align: "center" });
 
-      // Derechos de autor
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(130);
       doc.text("© 2025 | Diseño con derechos de autor – Luis Eduardo Ibarra Hernández – CBTis No. 179", 105, 230, { align: "center" });
 
-      // Pie institucional
       const pie = new Image();
       pie.src = "pie.png";
       try { doc.addImage(pie, "PNG", 10, 265, 190, 20); } catch(e){}
 
-      // Guardar PDF
       doc.save(`Justificante_${folio}.pdf`);
 
-      // Registrar en Sheets
       const fecha = new Date().toLocaleString();
-      const data = {
-        fecha, folio, nombre, numero, especialidad, semestre, turno,
-        motivo, fechas, nombreEntrega, tipoEntrega, telefono, validador
-      };
-
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
+      const data = { fecha, folio, nombre, numero, especialidad, semestre, turno, motivo, fechas, nombreEntrega, tipoEntrega, telefono, validador };
+      await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
       alert("✅ Justificante generado y registrado correctamente.");
       document.getElementById("formJustificante").reset();
     }
   </script>
 </body>
 </html>
+
+
