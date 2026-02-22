@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estadísticas de Calificaciones - CBTis 179</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #6b0f1a;
+      color: white;
+      text-align: center;
+      padding: 1em;
+    }
+    header a {
+      color: #f9c0c8;
+      font-size: 0.85em;
+      text-decoration: none;
+    }
+    header a:hover { text-decoration: underline; }
+    main {
+      max-width: 960px;
+      margin: 2em auto;
+      background: white;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 { color: #6b0f1a; margin-top: 1.5em; }
+    h2:first-child { margin-top: 0; }
+    label { font-weight: bold; display: block; margin-top: 1em; }
+    input[type="file"], select {
+      width: 100%;
+      padding: 0.5em;
+      margin-top: 0.3em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #6b0f1a;
+      color: white;
+      border: none;
+      padding: 0.8em 1.5em;
+      border-radius: 5px;
+      margin-top: 1em;
+      cursor: pointer;
+    }
+    button:hover { background-color: #8c1c2c; }
+    button:disabled { background-color: #aaa; cursor: not-allowed; }
+    /* Login */
+    #login {
+      max-width: 400px;
+      margin: 100px auto;
+      background: white;
+      padding: 2em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    #login input {
+      width: 100%;
+      padding: 0.5em;
+      margin: 0.3em 0 0.8em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    /* Formato CSV */
+    .formato-info {
+      background: #fff8e1;
+      border-left: 4px solid #f0ad00;
+      padding: 1em;
+      border-radius: 4px;
+      margin: 1em 0;
+      font-size: 0.9em;
+    }
+    .formato-info code {
+      display: block;
+      background: #f4f4f4;
+      padding: 0.5em;
+      border-radius: 3px;
+      margin-top: 0.5em;
+      font-family: monospace;
+      white-space: pre;
+    }
+    /* Tarjetas de resumen */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1em;
+      margin: 1em 0;
+    }
+    .card {
+      background: #6b0f1a;
+      color: white;
+      padding: 1.2em;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .card .valor {
+      font-size: 2em;
+      font-weight: bold;
+    }
+    .card .etiqueta {
+      font-size: 0.85em;
+      margin-top: 0.3em;
+      opacity: 0.9;
+    }
+    .card.verde { background: #2e7d32; }
+    .card.rojo  { background: #c62828; }
+    .card.azul  { background: #1565c0; }
+    /* Tablas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+      font-size: 0.9em;
+    }
+    th {
+      background-color: #6b0f1a;
+      color: white;
+      padding: 0.6em 0.8em;
+      text-align: left;
+    }
+    td {
+      padding: 0.5em 0.8em;
+      border-bottom: 1px solid #ddd;
+    }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    tr:hover { background-color: #fce4ec; }
+    td.reprobado { color: #c62828; font-weight: bold; }
+    td.aprobado  { color: #2e7d32; font-weight: bold; }
+    /* Gráficas */
+    .graficas {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2em;
+      margin-top: 1em;
+    }
+    @media (max-width: 640px) {
+      .graficas { grid-template-columns: 1fr; }
+    }
+    .grafica-box {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1em;
+    }
+    .grafica-box h3 {
+      color: #6b0f1a;
+      margin: 0 0 0.8em;
+      font-size: 1em;
+    }
+    /* Filtros */
+    .filtros {
+      display: flex;
+      gap: 1em;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin: 1em 0;
+    }
+    .filtros > div { flex: 1; min-width: 160px; }
+    /* Exportar */
+    .acciones {
+      display: flex;
+      gap: 0.8em;
+      flex-wrap: wrap;
+      margin-top: 1em;
+    }
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      padding: 10px;
+      font-size: 0.9em;
+      color: #6b0f1a;
+      border-top: 1px solid #ccc;
+    }
+    #error-msg {
+      color: #c62828;
+      background: #fce4ec;
+      border: 1px solid #e57373;
+      padding: 0.7em 1em;
+      border-radius: 5px;
+      margin-top: 0.5em;
+      display: none;
+    }
+    .oculto { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="encabezado.png" alt="CBTis 179" style="max-height:50px; display:block; margin:0 auto 0.5em;" onerror="this.style.display='none'">
+    <h1>Estadísticas de Calificaciones</h1>
+    <p style="margin:0; font-size:0.9em;">CBTis No. 179 &nbsp;|&nbsp; <a href="index.html">← Volver al sistema de justificantes</a></p>
+  </header>
+
+  <!-- Login -->
+  <div id="login">
+    <h2 style="color:#6b0f1a;">Acceso restringido</h2>
+    <p>Ingrese las credenciales autorizadas</p>
+    <input type="text" id="user" placeholder="Usuario">
+    <input type="password" id="pass" placeholder="Contraseña">
+    <button onclick="login()">Entrar</button>
+    <p id="msg-login" style="color:red; font-size:0.9em;"></p>
+  </div>
+
+  <!-- Contenido principal -->
+  <main id="app" class="oculto">
+    <h2>Cargar base de calificaciones</h2>
+
+    <div class="formato-info">
+      <strong>Formato del archivo CSV:</strong> La primera fila debe contener los encabezados.
+      La primera columna es el nombre del alumno; las siguientes columnas son las materias.
+      Calificaciones de 0 a 10. Se considera <strong>aprobado ≥ 6</strong>.
+      <code>Nombre,Matemáticas,Español,Física,Historia
+Juan Pérez,8,7,9,6
+María García,5,8,7,9
+Pedro López,6,6,5,7</code>
+    </div>
+
+    <label>Archivo CSV de calificaciones:</label>
+    <input type="file" id="archivoCSV" accept=".csv">
+    <p id="error-msg"></p>
+
+    <div class="filtros" id="filtros-grupo" style="display:none;">
+      <div>
+        <label>Filtrar por grupo / grupo:</label>
+        <select id="filtroGrupo" onchange="actualizarVista()">
+          <option value="">Todos los alumnos</option>
+        </select>
+      </div>
+      <div>
+        <label>Ordenar tabla por:</label>
+        <select id="ordenTabla" onchange="actualizarVista()">
+          <option value="nombre">Nombre</option>
+          <option value="promedio_desc">Promedio (mayor a menor)</option>
+          <option value="promedio_asc">Promedio (menor a mayor)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultados" class="oculto">
+      <h2>Resumen general</h2>
+      <div class="cards" id="cards-resumen"></div>
+
+      <div class="graficas">
+        <div class="grafica-box">
+          <h3>Distribución de promedios</h3>
+          <canvas id="graficaDistribucion"></canvas>
+        </div>
+        <div class="grafica-box">
+          <h3>Aprobados vs Reprobados</h3>
+          <canvas id="graficaAprobados"></canvas>
+        </div>
+        <div class="grafica-box">
+          <h3>Promedio por materia</h3>
+          <canvas id="graficaMaterias"></canvas>
+        </div>
+        <div class="grafica-box">
+          <h3>Top 5 alumnos</h3>
+          <canvas id="graficaTop5"></canvas>
+        </div>
+      </div>
+
+      <h2>Estadísticas por materia</h2>
+      <div id="tabla-materias"></div>
+
+      <h2>Calificaciones por alumno</h2>
+      <div class="acciones">
+        <button onclick="exportarCSV()">Exportar CSV</button>
+        <button onclick="exportarResumenTexto()">Exportar resumen TXT</button>
+        <button onclick="imprimirPagina()">Imprimir / Guardar PDF</button>
+      </div>
+      <div id="tabla-alumnos"></div>
+    </div>
+  </main>
+
+  <footer>
+    © 2025 | Diseño con derechos de autor. Desarrollado por <strong>Luis Eduardo Ibarra Hernández</strong> — CBTis No. 179.
+  </footer>
+
+  <script>
+    // ── Credenciales ─────────────────────────────────────────────────────────
+    const USER = "cbtis179";
+    const PASS = "justificante2025";
+
+    function login() {
+      const u = document.getElementById("user").value;
+      const p = document.getElementById("pass").value;
+      if (u === USER && p === PASS) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("app").classList.remove("oculto");
+      } else {
+        document.getElementById("msg-login").textContent = "Usuario o contraseña incorrectos.";
+      }
+    }
+
+    // ── Estado global ─────────────────────────────────────────────────────────
+    let datosOriginales = [];   // { nombre, grupo, materias:{mat:cal,...}, promedio }
+    let materias        = [];
+    let graficas        = {};
+
+    // ── Carga de archivo ──────────────────────────────────────────────────────
+    document.getElementById("archivoCSV").addEventListener("change", function(e) {
+      const archivo = e.target.files[0];
+      if (!archivo) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          procesarCSV(ev.target.result);
+        } catch(err) {
+          mostrarError("Error al leer el archivo: " + err.message);
+        }
+      };
+      reader.readAsText(archivo, "UTF-8");
+    });
+
+    function mostrarError(msg) {
+      const el = document.getElementById("error-msg");
+      el.textContent = msg;
+      el.style.display = "block";
+      document.getElementById("resultados").classList.add("oculto");
+    }
+
+    function ocultarError() {
+      document.getElementById("error-msg").style.display = "none";
+    }
+
+    // ── Parseo CSV ────────────────────────────────────────────────────────────
+    function parsearCSV(texto) {
+      const lineas = texto.trim().split(/\r?\n/);
+      return lineas.map(linea => {
+        // Soporta valores entre comillas con comas internas
+        const cols = [];
+        let dentro = false, campo = "";
+        for (let c of linea) {
+          if (c === '"') { dentro = !dentro; }
+          else if (c === ',' && !dentro) { cols.push(campo.trim()); campo = ""; }
+          else { campo += c; }
+        }
+        cols.push(campo.trim());
+        return cols;
+      });
+    }
+
+    function procesarCSV(texto) {
+      ocultarError();
+      const filas = parsearCSV(texto);
+      if (filas.length < 2) { mostrarError("El archivo debe tener al menos una fila de encabezado y un alumno."); return; }
+
+      const encabezados = filas[0];
+      if (encabezados.length < 2) { mostrarError("Se necesita al menos una columna de nombre y una materia."); return; }
+
+      // Detectar si hay columna de grupo (segunda columna no numérica en la primera fila de datos)
+      let colInicio = 1;       // índice donde empiezan las materias
+      let tieneGrupo = false;
+      const primeraFila = filas[1];
+      if (encabezados.length >= 3 && isNaN(parseFloat(primeraFila[1]))) {
+        tieneGrupo = true;
+        colInicio = 2;
+      }
+
+      materias = encabezados.slice(colInicio);
+      if (materias.length === 0) { mostrarError("No se encontraron columnas de materias."); return; }
+
+      datosOriginales = [];
+      const grupos = new Set();
+
+      for (let i = 1; i < filas.length; i++) {
+        const fila = filas[i];
+        if (fila.every(c => c === "")) continue;   // saltar filas vacías
+
+        const nombre = fila[0] || `Alumno ${i}`;
+        const grupo  = tieneGrupo ? (fila[1] || "") : "";
+        if (grupo) grupos.add(grupo);
+
+        const califs = {};
+        let suma = 0, conteo = 0;
+        for (let j = 0; j < materias.length; j++) {
+          const val = parseFloat(fila[colInicio + j]);
+          if (!isNaN(val)) {
+            califs[materias[j]] = Math.min(10, Math.max(0, val));
+            suma += califs[materias[j]];
+            conteo++;
+          } else {
+            califs[materias[j]] = null;
+          }
+        }
+        const promedio = conteo > 0 ? suma / conteo : 0;
+        datosOriginales.push({ nombre, grupo, materias: califs, promedio });
+      }
+
+      if (datosOriginales.length === 0) { mostrarError("No se encontraron alumnos en el archivo."); return; }
+
+      // Poblar filtro de grupos
+      const selectGrupo = document.getElementById("filtroGrupo");
+      selectGrupo.innerHTML = '<option value="">Todos los alumnos</option>';
+      grupos.forEach(g => {
+        const opt = document.createElement("option");
+        opt.value = g; opt.textContent = g;
+        selectGrupo.appendChild(opt);
+      });
+      document.getElementById("filtros-grupo").style.display = tieneGrupo ? "flex" : "none";
+
+      actualizarVista();
+      document.getElementById("resultados").classList.remove("oculto");
+    }
+
+    // ── Vista principal ───────────────────────────────────────────────────────
+    function actualizarVista() {
+      const grupoFiltro = document.getElementById("filtroGrupo").value;
+      const orden       = document.getElementById("ordenTabla").value;
+
+      let datos = grupoFiltro
+        ? datosOriginales.filter(a => a.grupo === grupoFiltro)
+        : [...datosOriginales];
+
+      // Ordenar
+      if (orden === "promedio_desc") datos.sort((a,b) => b.promedio - a.promedio);
+      else if (orden === "promedio_asc") datos.sort((a,b) => a.promedio - b.promedio);
+      else datos.sort((a,b) => a.nombre.localeCompare(b.nombre));
+
+      renderCards(datos);
+      renderGraficas(datos);
+      renderTablaMaterias(datos);
+      renderTablaAlumnos(datos);
+    }
+
+    // ── Tarjetas de resumen ───────────────────────────────────────────────────
+    function renderCards(datos) {
+      const total       = datos.length;
+      const aprobados   = datos.filter(a => a.promedio >= 6).length;
+      const reprobados  = total - aprobados;
+      const promedioGen = total > 0 ? datos.reduce((s,a) => s+a.promedio, 0) / total : 0;
+      const maxProm     = total > 0 ? Math.max(...datos.map(a => a.promedio)) : 0;
+      const minProm     = total > 0 ? Math.min(...datos.map(a => a.promedio)) : 0;
+
+      document.getElementById("cards-resumen").innerHTML = `
+        <div class="card azul">
+          <div class="valor">${total}</div>
+          <div class="etiqueta">Alumnos</div>
+        </div>
+        <div class="card">
+          <div class="valor">${promedioGen.toFixed(2)}</div>
+          <div class="etiqueta">Promedio general</div>
+        </div>
+        <div class="card verde">
+          <div class="valor">${aprobados}</div>
+          <div class="etiqueta">Aprobados (${total > 0 ? (aprobados/total*100).toFixed(1) : 0}%)</div>
+        </div>
+        <div class="card rojo">
+          <div class="valor">${reprobados}</div>
+          <div class="etiqueta">Reprobados (${total > 0 ? (reprobados/total*100).toFixed(1) : 0}%)</div>
+        </div>
+        <div class="card">
+          <div class="valor">${maxProm.toFixed(2)}</div>
+          <div class="etiqueta">Promedio más alto</div>
+        </div>
+        <div class="card">
+          <div class="valor">${minProm.toFixed(2)}</div>
+          <div class="etiqueta">Promedio más bajo</div>
+        </div>
+      `;
+    }
+
+    // ── Gráficas ──────────────────────────────────────────────────────────────
+    function destruirGrafica(id) {
+      if (graficas[id]) { graficas[id].destroy(); delete graficas[id]; }
+    }
+
+    function renderGraficas(datos) {
+      // Distribución de promedios por rangos
+      destruirGrafica("dist");
+      const rangos = { "0–4.9": 0, "5": 0, "6–6.9": 0, "7–7.9": 0, "8–8.9": 0, "9–10": 0 };
+      datos.forEach(a => {
+        const p = a.promedio;
+        if (p < 5)       rangos["0–4.9"]++;
+        else if (p < 6)  rangos["5"]++;
+        else if (p < 7)  rangos["6–6.9"]++;
+        else if (p < 8)  rangos["7–7.9"]++;
+        else if (p < 9)  rangos["8–8.9"]++;
+        else             rangos["9–10"]++;
+      });
+      graficas["dist"] = new Chart(document.getElementById("graficaDistribucion"), {
+        type: "bar",
+        data: {
+          labels: Object.keys(rangos),
+          datasets: [{
+            label: "Alumnos",
+            data: Object.values(rangos),
+            backgroundColor: ["#c62828","#e53935","#fb8c00","#43a047","#1e88e5","#00897b"]
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      // Aprobados vs Reprobados
+      destruirGrafica("apro");
+      const aprobados  = datos.filter(a => a.promedio >= 6).length;
+      const reprobados = datos.length - aprobados;
+      graficas["apro"] = new Chart(document.getElementById("graficaAprobados"), {
+        type: "doughnut",
+        data: {
+          labels: ["Aprobados", "Reprobados"],
+          datasets: [{
+            data: [aprobados, reprobados],
+            backgroundColor: ["#2e7d32", "#c62828"]
+          }]
+        },
+        options: { responsive: true }
+      });
+
+      // Promedio por materia
+      destruirGrafica("mat");
+      const promediosMat = materias.map(mat => {
+        const vals = datos.map(a => a.materias[mat]).filter(v => v !== null && v !== undefined);
+        return vals.length > 0 ? vals.reduce((s,v) => s+v, 0) / vals.length : 0;
+      });
+      graficas["mat"] = new Chart(document.getElementById("graficaMaterias"), {
+        type: "bar",
+        data: {
+          labels: materias,
+          datasets: [{
+            label: "Promedio",
+            data: promediosMat.map(v => parseFloat(v.toFixed(2))),
+            backgroundColor: "#6b0f1a"
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { min: 0, max: 10 } },
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // Top 5 alumnos
+      destruirGrafica("top5");
+      const top5 = [...datos].sort((a,b) => b.promedio - a.promedio).slice(0, 5);
+      graficas["top5"] = new Chart(document.getElementById("graficaTop5"), {
+        type: "bar",
+        data: {
+          labels: top5.map(a => a.nombre.split(" ")[0]),  // primer nombre para que quepa
+          datasets: [{
+            label: "Promedio",
+            data: top5.map(a => parseFloat(a.promedio.toFixed(2))),
+            backgroundColor: "#1565c0"
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { min: 0, max: 10 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => top5[items[0].dataIndex].nombre
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ── Tabla por materia ─────────────────────────────────────────────────────
+    function renderTablaMaterias(datos) {
+      let html = "<table><thead><tr><th>Materia</th><th>Promedio</th><th>Máximo</th><th>Mínimo</th><th>Aprobados</th><th>Reprobados</th></tr></thead><tbody>";
+      materias.forEach(mat => {
+        const vals = datos.map(a => a.materias[mat]).filter(v => v !== null && v !== undefined);
+        if (vals.length === 0) return;
+        const prom = vals.reduce((s,v) => s+v, 0) / vals.length;
+        const max  = Math.max(...vals);
+        const min  = Math.min(...vals);
+        const apro = vals.filter(v => v >= 6).length;
+        const repr = vals.length - apro;
+        html += `<tr>
+          <td>${mat}</td>
+          <td>${prom.toFixed(2)}</td>
+          <td>${max}</td>
+          <td>${min}</td>
+          <td class="aprobado">${apro}</td>
+          <td class="reprobado">${repr}</td>
+        </tr>`;
+      });
+      html += "</tbody></table>";
+      document.getElementById("tabla-materias").innerHTML = html;
+    }
+
+    // ── Tabla por alumno ──────────────────────────────────────────────────────
+    function renderTablaAlumnos(datos) {
+      let html = "<table><thead><tr><th>#</th><th>Nombre</th>";
+      if (datos.some(a => a.grupo)) html += "<th>Grupo</th>";
+      materias.forEach(m => html += `<th>${m}</th>`);
+      html += "<th>Promedio</th><th>Estado</th></tr></thead><tbody>";
+
+      datos.forEach((a, i) => {
+        const aprobado = a.promedio >= 6;
+        html += `<tr>
+          <td>${i+1}</td>
+          <td>${a.nombre}</td>
+          ${datos.some(x => x.grupo) ? `<td>${a.grupo}</td>` : ""}
+          ${materias.map(m => {
+            const v = a.materias[m];
+            if (v === null || v === undefined) return "<td>—</td>";
+            return `<td class="${v < 6 ? 'reprobado' : ''}">${v}</td>`;
+          }).join("")}
+          <td><strong>${a.promedio.toFixed(2)}</strong></td>
+          <td class="${aprobado ? 'aprobado' : 'reprobado'}">${aprobado ? "Aprobado" : "Reprobado"}</td>
+        </tr>`;
+      });
+      html += "</tbody></table>";
+      document.getElementById("tabla-alumnos").innerHTML = html;
+    }
+
+    // ── Exportar CSV ──────────────────────────────────────────────────────────
+    function exportarCSV() {
+      const grupoFiltro = document.getElementById("filtroGrupo").value;
+      let datos = grupoFiltro
+        ? datosOriginales.filter(a => a.grupo === grupoFiltro)
+        : [...datosOriginales];
+
+      let csv = ["Nombre", ...(datos.some(a=>a.grupo) ? ["Grupo"] : []), ...materias, "Promedio", "Estado"].join(",") + "\n";
+      datos.forEach(a => {
+        const fila = [
+          `"${a.nombre}"`,
+          ...(datos.some(x=>x.grupo) ? [`"${a.grupo}"`] : []),
+          ...materias.map(m => a.materias[m] ?? ""),
+          a.promedio.toFixed(2),
+          a.promedio >= 6 ? "Aprobado" : "Reprobado"
+        ];
+        csv += fila.join(",") + "\n";
+      });
+      descargar("estadisticas_calificaciones.csv", csv, "text/csv");
+    }
+
+    // ── Exportar resumen TXT ──────────────────────────────────────────────────
+    function exportarResumenTexto() {
+      const total      = datosOriginales.length;
+      const aprobados  = datosOriginales.filter(a => a.promedio >= 6).length;
+      const reprobados = total - aprobados;
+      const promGen    = total > 0 ? datosOriginales.reduce((s,a) => s+a.promedio, 0) / total : 0;
+
+      let txt = `REPORTE DE ESTADÍSTICAS DE CALIFICACIONES\n`;
+      txt    += `CBTis No. 179\n`;
+      txt    += `Fecha: ${new Date().toLocaleDateString("es-MX", {year:"numeric",month:"long",day:"numeric"})}\n\n`;
+      txt    += `─────────────────────────────────────────\n`;
+      txt    += `RESUMEN GENERAL\n`;
+      txt    += `─────────────────────────────────────────\n`;
+      txt    += `Total de alumnos : ${total}\n`;
+      txt    += `Promedio general : ${promGen.toFixed(2)}\n`;
+      txt    += `Aprobados        : ${aprobados} (${(aprobados/total*100).toFixed(1)}%)\n`;
+      txt    += `Reprobados       : ${reprobados} (${(reprobados/total*100).toFixed(1)}%)\n\n`;
+      txt    += `─────────────────────────────────────────\n`;
+      txt    += `ESTADÍSTICAS POR MATERIA\n`;
+      txt    += `─────────────────────────────────────────\n`;
+      materias.forEach(mat => {
+        const vals = datosOriginales.map(a => a.materias[mat]).filter(v => v !== null && v !== undefined);
+        if (vals.length === 0) return;
+        const prom = vals.reduce((s,v) => s+v, 0) / vals.length;
+        txt += `${mat.padEnd(25)} Promedio: ${prom.toFixed(2)}\n`;
+      });
+      descargar("resumen_calificaciones.txt", txt, "text/plain");
+    }
+
+    function descargar(nombre, contenido, tipo) {
+      const blob = new Blob([contenido], { type: tipo });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = nombre;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function imprimirPagina() {
+      window.print();
+    }
+  </script>
+</body>
+</html>
