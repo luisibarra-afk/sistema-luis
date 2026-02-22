@@ -3,291 +3,576 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Estadísticas de Calificaciones - CBTis 179</title>
+  <title>Estadísticas · CBTis 179</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <style>
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:       #6b0f1a;
+      --primary-light: #9e1f30;
+      --accent:        #e63950;
+      --green:         #00b894;
+      --red:           #d63031;
+      --blue:          #0984e3;
+      --orange:        #e67e22;
+      --purple:        #6c5ce7;
+      --bg:            #f0f2f7;
+      --surface:       #ffffff;
+      --text:          #2d3436;
+      --text-muted:    #636e72;
+      --border:        #e0e3ea;
+      --shadow:        0 4px 20px rgba(0,0,0,0.07);
+      --shadow-lg:     0 8px 40px rgba(0,0,0,0.12);
+      --radius:        14px;
+      --radius-sm:     8px;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      margin: 0;
-      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
     }
-    header {
-      background-color: #6b0f1a;
-      color: white;
+
+    /* ── Login overlay ─────────────────────────────────────────────────────── */
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #3a0710 0%, #6b0f1a 50%, #9e1f30 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .login-card {
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 24px;
+      padding: 3em 2.5em 2.5em;
+      width: 100%;
+      max-width: 380px;
       text-align: center;
-      padding: 1em;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.35);
     }
-    header a {
-      color: #f9c0c8;
+
+    .login-icon {
+      width: 72px;
+      height: 72px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.2em;
+      font-size: 2em;
+    }
+
+    .login-card h2 {
+      color: #fff;
+      font-size: 1.25em;
+      font-weight: 600;
+      margin-bottom: 0.3em;
+    }
+
+    .login-card p {
+      color: rgba(255,255,255,0.65);
       font-size: 0.85em;
-      text-decoration: none;
+      margin-bottom: 1.8em;
     }
-    header a:hover { text-decoration: underline; }
-    main {
-      max-width: 960px;
-      margin: 2em auto;
-      background: white;
-      padding: 2em;
+
+    .login-card input {
+      width: 100%;
+      padding: 0.85em 1em;
+      border: 1.5px solid rgba(255,255,255,0.2);
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 { color: #6b0f1a; margin-top: 1.5em; }
-    h2:first-child { margin-top: 0; }
-    label { font-weight: bold; display: block; margin-top: 1em; }
-    input[type="file"], select {
-      width: 100%;
-      padding: 0.5em;
-      margin-top: 0.3em;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #6b0f1a;
-      color: white;
-      border: none;
-      padding: 0.8em 1.5em;
-      border-radius: 5px;
-      margin-top: 1em;
-      cursor: pointer;
-    }
-    button:hover { background-color: #8c1c2c; }
-    button:disabled { background-color: #aaa; cursor: not-allowed; }
-    /* Login */
-    #login {
-      max-width: 400px;
-      margin: 100px auto;
-      background: white;
-      padding: 2em;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    #login input {
-      width: 100%;
-      padding: 0.5em;
-      margin: 0.3em 0 0.8em;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    /* Formato CSV */
-    .formato-info {
-      background: #fff8e1;
-      border-left: 4px solid #f0ad00;
-      padding: 1em;
-      border-radius: 4px;
-      margin: 1em 0;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
       font-size: 0.9em;
+      margin-bottom: 0.8em;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
     }
+
+    .login-card input::placeholder { color: rgba(255,255,255,0.45); }
+    .login-card input:focus {
+      border-color: rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.14);
+    }
+
+    .login-card .btn-login {
+      width: 100%;
+      padding: 0.9em;
+      background: #fff;
+      color: var(--primary);
+      border: none;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95em;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 0.4em;
+      letter-spacing: 0.02em;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .login-card .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+
+    #msg-login {
+      color: #ffcdd2;
+      font-size: 0.82em;
+      margin-top: 0.9em;
+      min-height: 1.1em;
+    }
+
+    /* ── Navbar ────────────────────────────────────────────────────────────── */
+    .navbar {
+      background: var(--primary);
+      padding: 0.9em 2em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.22);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.9em;
+    }
+
+    .navbar-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25em;
+      flex-shrink: 0;
+    }
+
+    .navbar-brand h1 {
+      color: #fff;
+      font-size: 1em;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .navbar-brand span {
+      color: rgba(255,255,255,0.58);
+      font-size: 0.75em;
+      font-weight: 400;
+      display: block;
+    }
+
+    .navbar-badge {
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.85);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 20px;
+      padding: 0.3em 1em;
+      font-size: 0.75em;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Container ─────────────────────────────────────────────────────────── */
+    .container {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 2em 1.5em 3em;
+    }
+
+    /* ── Section title ─────────────────────────────────────────────────────── */
+    .section-title {
+      font-size: 0.82em;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin: 2.2em 0 0.9em;
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Upload card ───────────────────────────────────────────────────────── */
+    .card-panel {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.8em;
+      box-shadow: var(--shadow);
+    }
+
+    .formato-info {
+      background: #fffbea;
+      border-left: 4px solid #f0ad00;
+      border-radius: 0 8px 8px 0;
+      padding: 0.9em 1.1em;
+      font-size: 0.84em;
+      margin: 0 0 1.2em;
+      color: #5a4500;
+    }
+
     .formato-info code {
       display: block;
-      background: #f4f4f4;
-      padding: 0.5em;
-      border-radius: 3px;
-      margin-top: 0.5em;
+      background: #fff8d6;
+      padding: 0.6em 0.8em;
+      border-radius: 6px;
+      margin-top: 0.6em;
       font-family: monospace;
       white-space: pre;
+      font-size: 0.92em;
     }
-    /* Tarjetas de resumen */
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1em;
-      margin: 1em 0;
+
+    .field-label {
+      font-size: 0.82em;
+      font-weight: 500;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 0.35em;
     }
-    .card {
-      background: #6b0f1a;
-      color: white;
-      padding: 1.2em;
-      border-radius: 8px;
-      text-align: center;
-    }
-    .card .valor {
-      font-size: 2em;
-      font-weight: bold;
-    }
-    .card .etiqueta {
-      font-size: 0.85em;
-      margin-top: 0.3em;
-      opacity: 0.9;
-    }
-    .card.verde { background: #2e7d32; }
-    .card.rojo  { background: #c62828; }
-    .card.azul  { background: #1565c0; }
-    /* Tablas */
-    table {
+
+    input[type="file"], select {
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 1em;
-      font-size: 0.9em;
+      padding: 0.65em 0.9em;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.87em;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.2s;
     }
-    th {
-      background-color: #6b0f1a;
-      color: white;
-      padding: 0.6em 0.8em;
-      text-align: left;
-    }
-    td {
-      padding: 0.5em 0.8em;
-      border-bottom: 1px solid #ddd;
-    }
-    tr:nth-child(even) { background-color: #f9f9f9; }
-    tr:hover { background-color: #fce4ec; }
-    td.reprobado { color: #c62828; font-weight: bold; }
-    td.aprobado  { color: #2e7d32; font-weight: bold; }
-    /* Gráficas */
-    .graficas {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2em;
-      margin-top: 1em;
-    }
-    @media (max-width: 640px) {
-      .graficas { grid-template-columns: 1fr; }
-    }
-    .grafica-box {
-      background: #fafafa;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 1em;
-    }
-    .grafica-box h3 {
-      color: #6b0f1a;
-      margin: 0 0 0.8em;
-      font-size: 1em;
-    }
-    /* Filtros */
+
+    input[type="file"]:focus, select:focus { border-color: var(--primary); }
+
     .filtros {
       display: flex;
       gap: 1em;
       flex-wrap: wrap;
-      align-items: flex-end;
-      margin: 1em 0;
+      margin-top: 1.2em;
     }
+
     .filtros > div { flex: 1; min-width: 160px; }
-    /* Exportar */
-    .acciones {
-      display: flex;
-      gap: 0.8em;
-      flex-wrap: wrap;
-      margin-top: 1em;
-    }
-    footer {
-      text-align: center;
-      margin-top: 30px;
-      padding: 10px;
-      font-size: 0.9em;
-      color: #6b0f1a;
-      border-top: 1px solid #ccc;
-    }
+
     #error-msg {
       color: #c62828;
       background: #fce4ec;
-      border: 1px solid #e57373;
+      border: 1.5px solid #ef9a9a;
       padding: 0.7em 1em;
-      border-radius: 5px;
-      margin-top: 0.5em;
+      border-radius: var(--radius-sm);
+      margin-top: 0.7em;
+      font-size: 0.84em;
       display: none;
     }
-    .oculto { display: none; }
+
+    /* ── Stat cards ────────────────────────────────────────────────────────── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+      gap: 1em;
+    }
+
+    .stat-card {
+      border-radius: var(--radius);
+      padding: 1.4em 1.3em;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: -28px;
+      right: -28px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.10);
+    }
+
+    .stat-card.c-primary { background: linear-gradient(135deg, #6b0f1a, #9e1f30); }
+    .stat-card.c-green   { background: linear-gradient(135deg, #00b894, #00cec9); }
+    .stat-card.c-red     { background: linear-gradient(135deg, #d63031, #e17055); }
+    .stat-card.c-blue    { background: linear-gradient(135deg, #0984e3, #74b9ff); }
+    .stat-card.c-orange  { background: linear-gradient(135deg, #e67e22, #f0a500); }
+    .stat-card.c-purple  { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+
+    .stat-card .valor {
+      font-size: 2.1em;
+      font-weight: 700;
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-card .etiqueta {
+      font-size: 0.77em;
+      margin-top: 0.4em;
+      opacity: 0.88;
+      font-weight: 500;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Charts grid ───────────────────────────────────────────────────────── */
+    .graficas {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2em;
+    }
+
+    .grafica-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.5em;
+      box-shadow: var(--shadow);
+    }
+
+    .grafica-box h3 {
+      font-size: 0.78em;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1em;
+    }
+
+    /* ── Tables ────────────────────────────────────────────────────────────── */
+    .table-wrapper {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.87em;
+    }
+
+    thead th {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.8em 1em;
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.84em;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 0.65em 1em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:nth-child(even) { background: #fafafa; }
+    tbody tr:hover { background: #fce4ec; transition: background 0.15s; }
+
+    td.reprobado { color: #d63031; font-weight: 600; }
+    td.aprobado  { color: #00b894; font-weight: 600; }
+
+    /* ── Action buttons ────────────────────────────────────────────────────── */
+    .acciones {
+      display: flex;
+      gap: 0.7em;
+      flex-wrap: wrap;
+      margin: 1.2em 0 0.8em;
+    }
+
+    .btn {
+      padding: 0.65em 1.3em;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.84em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+
+    .btn:hover  { transform: translateY(-2px); box-shadow: 0 5px 14px rgba(0,0,0,0.14); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-green   { background: var(--green);  color: #fff; }
+    .btn-blue    { background: var(--blue);   color: #fff; }
+    .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+
+    /* ── Animations ────────────────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #resultados { animation: fadeUp 0.35s ease; }
+
+    /* ── Oculto ────────────────────────────────────────────────────────────── */
+    .oculto { display: none !important; }
+
+    /* ── Footer ────────────────────────────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      padding: 1.5em;
+      font-size: 0.76em;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      margin-top: 1em;
+    }
+
+    /* ── Responsive ────────────────────────────────────────────────────────── */
+    @media (max-width: 620px) {
+      .graficas { grid-template-columns: 1fr; }
+      .cards    { grid-template-columns: repeat(2, 1fr); }
+      .navbar   { padding: 0.9em 1.2em; }
+      .navbar-badge { display: none; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <img src="encabezado.png" alt="CBTis 179" style="max-height:50px; display:block; margin:0 auto 0.5em;" onerror="this.style.display='none'">
-    <h1>Estadísticas de Calificaciones</h1>
-    <p style="margin:0; font-size:0.9em;">CBTis No. 179 &nbsp;|&nbsp; <a href="index.html">← Volver al sistema de justificantes</a></p>
-  </header>
 
-  <!-- Login -->
-  <div id="login">
-    <h2 style="color:#6b0f1a;">Acceso restringido</h2>
-    <p>Ingrese las credenciales autorizadas</p>
-    <input type="text" id="user" placeholder="Usuario">
-    <input type="password" id="pass" placeholder="Contraseña">
-    <button onclick="login()">Entrar</button>
-    <p id="msg-login" style="color:red; font-size:0.9em;"></p>
+  <!-- ── Login overlay ─────────────────────────────────────────────────────── -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <div class="login-icon">📊</div>
+      <h2>Estadísticas · CBTis 179</h2>
+      <p>Ingresa tus credenciales para continuar</p>
+      <input type="text"     id="user" placeholder="Usuario"     autocomplete="off">
+      <input type="password" id="pass" placeholder="Contraseña">
+      <button class="btn-login" onclick="login()">Entrar al sistema</button>
+      <div id="msg-login"></div>
+    </div>
   </div>
 
-  <!-- Contenido principal -->
-  <main id="app" class="oculto">
-    <h2>Cargar base de calificaciones</h2>
+  <!-- ── App ───────────────────────────────────────────────────────────────── -->
+  <div id="app" class="oculto">
 
-    <div class="formato-info">
-      <strong>Formato del archivo CSV:</strong> La primera fila debe contener los encabezados.
-      La primera columna es el nombre del alumno; las siguientes columnas son las materias.
-      Calificaciones de 0 a 10. Se considera <strong>aprobado ≥ 6</strong>.
-      <code>Nombre,Matemáticas,Español,Física,Historia
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <div class="navbar-icon">📊</div>
+        <div>
+          <h1>Estadísticas de Calificaciones</h1>
+          <span>CBTis No. 179</span>
+        </div>
+      </div>
+      <div class="navbar-badge">Sistema escolar</div>
+    </nav>
+
+    <div class="container">
+
+      <!-- Cargar archivo -->
+      <p class="section-title">📂 Cargar archivo</p>
+      <div class="card-panel">
+        <div class="formato-info">
+          <strong>Formato del archivo CSV:</strong> La primera fila debe contener los encabezados.
+          La primera columna es el nombre del alumno; las siguientes columnas son las materias.
+          Calificaciones de 0 a 10 — se considera <strong>aprobado ≥ 6</strong>.
+          <code>Nombre,Matemáticas,Español,Física,Historia
 Juan Pérez,8,7,9,6
 María García,5,8,7,9
 Pedro López,6,6,5,7</code>
+        </div>
+
+        <label class="field-label">Archivo CSV de calificaciones</label>
+        <input type="file" id="archivoCSV" accept=".csv">
+        <div id="error-msg"></div>
+
+        <div class="filtros" id="filtros-grupo" style="display:none;">
+          <div>
+            <label class="field-label">Filtrar por grupo</label>
+            <select id="filtroGrupo" onchange="actualizarVista()">
+              <option value="">Todos los alumnos</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Ordenar tabla por</label>
+            <select id="ordenTabla" onchange="actualizarVista()">
+              <option value="nombre">Nombre</option>
+              <option value="promedio_desc">Promedio (mayor a menor)</option>
+              <option value="promedio_asc">Promedio (menor a mayor)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resultados -->
+      <div id="resultados" class="oculto">
+
+        <p class="section-title">📈 Resumen general</p>
+        <div class="cards" id="cards-resumen"></div>
+
+        <p class="section-title">📉 Gráficas</p>
+        <div class="graficas">
+          <div class="grafica-box">
+            <h3>Distribución de promedios</h3>
+            <canvas id="graficaDistribucion"></canvas>
+          </div>
+          <div class="grafica-box">
+            <h3>Aprobados vs Reprobados</h3>
+            <canvas id="graficaAprobados"></canvas>
+          </div>
+          <div class="grafica-box">
+            <h3>Promedio por materia</h3>
+            <canvas id="graficaMaterias"></canvas>
+          </div>
+          <div class="grafica-box">
+            <h3>Top 5 alumnos</h3>
+            <canvas id="graficaTop5"></canvas>
+          </div>
+        </div>
+
+        <p class="section-title">📋 Estadísticas por materia</p>
+        <div class="table-wrapper" id="tabla-materias"></div>
+
+        <p class="section-title">👥 Calificaciones por alumno</p>
+        <div class="acciones">
+          <button class="btn btn-green"   onclick="exportarCSV()">⬇ Exportar CSV</button>
+          <button class="btn btn-blue"    onclick="exportarResumenTexto()">📄 Exportar TXT</button>
+          <button class="btn btn-outline" onclick="imprimirPagina()">🖨 Imprimir / PDF</button>
+        </div>
+        <div class="table-wrapper" id="tabla-alumnos"></div>
+
+      </div><!-- /resultados -->
+
+    </div><!-- /container -->
+
+    <div class="footer">
+      © 2025 — Desarrollado por <strong>Luis Eduardo Ibarra Hernández</strong> · CBTis No. 179
     </div>
 
-    <label>Archivo CSV de calificaciones:</label>
-    <input type="file" id="archivoCSV" accept=".csv">
-    <p id="error-msg"></p>
-
-    <div class="filtros" id="filtros-grupo" style="display:none;">
-      <div>
-        <label>Filtrar por grupo / grupo:</label>
-        <select id="filtroGrupo" onchange="actualizarVista()">
-          <option value="">Todos los alumnos</option>
-        </select>
-      </div>
-      <div>
-        <label>Ordenar tabla por:</label>
-        <select id="ordenTabla" onchange="actualizarVista()">
-          <option value="nombre">Nombre</option>
-          <option value="promedio_desc">Promedio (mayor a menor)</option>
-          <option value="promedio_asc">Promedio (menor a mayor)</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Resultados -->
-    <div id="resultados" class="oculto">
-      <h2>Resumen general</h2>
-      <div class="cards" id="cards-resumen"></div>
-
-      <div class="graficas">
-        <div class="grafica-box">
-          <h3>Distribución de promedios</h3>
-          <canvas id="graficaDistribucion"></canvas>
-        </div>
-        <div class="grafica-box">
-          <h3>Aprobados vs Reprobados</h3>
-          <canvas id="graficaAprobados"></canvas>
-        </div>
-        <div class="grafica-box">
-          <h3>Promedio por materia</h3>
-          <canvas id="graficaMaterias"></canvas>
-        </div>
-        <div class="grafica-box">
-          <h3>Top 5 alumnos</h3>
-          <canvas id="graficaTop5"></canvas>
-        </div>
-      </div>
-
-      <h2>Estadísticas por materia</h2>
-      <div id="tabla-materias"></div>
-
-      <h2>Calificaciones por alumno</h2>
-      <div class="acciones">
-        <button onclick="exportarCSV()">Exportar CSV</button>
-        <button onclick="exportarResumenTexto()">Exportar resumen TXT</button>
-        <button onclick="imprimirPagina()">Imprimir / Guardar PDF</button>
-      </div>
-      <div id="tabla-alumnos"></div>
-    </div>
-  </main>
-
-  <footer>
-    © 2025 | Diseño con derechos de autor. Desarrollado por <strong>Luis Eduardo Ibarra Hernández</strong> — CBTis No. 179.
-  </footer>
+  </div><!-- /app -->
 
   <script>
-    // ── Credenciales ─────────────────────────────────────────────────────────
+    // ── Credenciales ──────────────────────────────────────────────────────────
     const USER = "cbtis179";
     const PASS = "justificante2025";
 
@@ -295,15 +580,19 @@ Pedro López,6,6,5,7</code>
       const u = document.getElementById("user").value;
       const p = document.getElementById("pass").value;
       if (u === USER && p === PASS) {
-        document.getElementById("login").style.display = "none";
+        document.getElementById("login-overlay").style.display = "none";
         document.getElementById("app").classList.remove("oculto");
       } else {
         document.getElementById("msg-login").textContent = "Usuario o contraseña incorrectos.";
       }
     }
 
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter" && document.getElementById("login-overlay").style.display !== "none") login();
+    });
+
     // ── Estado global ─────────────────────────────────────────────────────────
-    let datosOriginales = [];   // { nombre, grupo, materias:{mat:cal,...}, promedio }
+    let datosOriginales = [];
     let materias        = [];
     let graficas        = {};
 
@@ -313,11 +602,8 @@ Pedro López,6,6,5,7</code>
       if (!archivo) return;
       const reader = new FileReader();
       reader.onload = function(ev) {
-        try {
-          procesarCSV(ev.target.result);
-        } catch(err) {
-          mostrarError("Error al leer el archivo: " + err.message);
-        }
+        try { procesarCSV(ev.target.result); }
+        catch(err) { mostrarError("Error al leer el archivo: " + err.message); }
       };
       reader.readAsText(archivo, "UTF-8");
     });
@@ -337,7 +623,6 @@ Pedro López,6,6,5,7</code>
     function parsearCSV(texto) {
       const lineas = texto.trim().split(/\r?\n/);
       return lineas.map(linea => {
-        // Soporta valores entre comillas con comas internas
         const cols = [];
         let dentro = false, campo = "";
         for (let c of linea) {
@@ -358,8 +643,7 @@ Pedro López,6,6,5,7</code>
       const encabezados = filas[0];
       if (encabezados.length < 2) { mostrarError("Se necesita al menos una columna de nombre y una materia."); return; }
 
-      // Detectar si hay columna de grupo (segunda columna no numérica en la primera fila de datos)
-      let colInicio = 1;       // índice donde empiezan las materias
+      let colInicio = 1;
       let tieneGrupo = false;
       const primeraFila = filas[1];
       if (encabezados.length >= 3 && isNaN(parseFloat(primeraFila[1]))) {
@@ -375,7 +659,7 @@ Pedro López,6,6,5,7</code>
 
       for (let i = 1; i < filas.length; i++) {
         const fila = filas[i];
-        if (fila.every(c => c === "")) continue;   // saltar filas vacías
+        if (fila.every(c => c === "")) continue;
 
         const nombre = fila[0] || `Alumno ${i}`;
         const grupo  = tieneGrupo ? (fila[1] || "") : "";
@@ -399,7 +683,6 @@ Pedro López,6,6,5,7</code>
 
       if (datosOriginales.length === 0) { mostrarError("No se encontraron alumnos en el archivo."); return; }
 
-      // Poblar filtro de grupos
       const selectGrupo = document.getElementById("filtroGrupo");
       selectGrupo.innerHTML = '<option value="">Todos los alumnos</option>';
       grupos.forEach(g => {
@@ -422,7 +705,6 @@ Pedro López,6,6,5,7</code>
         ? datosOriginales.filter(a => a.grupo === grupoFiltro)
         : [...datosOriginales];
 
-      // Ordenar
       if (orden === "promedio_desc") datos.sort((a,b) => b.promedio - a.promedio);
       else if (orden === "promedio_asc") datos.sort((a,b) => a.promedio - b.promedio);
       else datos.sort((a,b) => a.nombre.localeCompare(b.nombre));
@@ -443,27 +725,27 @@ Pedro López,6,6,5,7</code>
       const minProm     = total > 0 ? Math.min(...datos.map(a => a.promedio)) : 0;
 
       document.getElementById("cards-resumen").innerHTML = `
-        <div class="card azul">
+        <div class="stat-card c-blue">
           <div class="valor">${total}</div>
           <div class="etiqueta">Alumnos</div>
         </div>
-        <div class="card">
+        <div class="stat-card c-primary">
           <div class="valor">${promedioGen.toFixed(2)}</div>
           <div class="etiqueta">Promedio general</div>
         </div>
-        <div class="card verde">
+        <div class="stat-card c-green">
           <div class="valor">${aprobados}</div>
           <div class="etiqueta">Aprobados (${total > 0 ? (aprobados/total*100).toFixed(1) : 0}%)</div>
         </div>
-        <div class="card rojo">
+        <div class="stat-card c-red">
           <div class="valor">${reprobados}</div>
           <div class="etiqueta">Reprobados (${total > 0 ? (reprobados/total*100).toFixed(1) : 0}%)</div>
         </div>
-        <div class="card">
+        <div class="stat-card c-orange">
           <div class="valor">${maxProm.toFixed(2)}</div>
           <div class="etiqueta">Promedio más alto</div>
         </div>
-        <div class="card">
+        <div class="stat-card c-purple">
           <div class="valor">${minProm.toFixed(2)}</div>
           <div class="etiqueta">Promedio más bajo</div>
         </div>
@@ -476,17 +758,16 @@ Pedro López,6,6,5,7</code>
     }
 
     function renderGraficas(datos) {
-      // Distribución de promedios por rangos
       destruirGrafica("dist");
       const rangos = { "0–4.9": 0, "5": 0, "6–6.9": 0, "7–7.9": 0, "8–8.9": 0, "9–10": 0 };
       datos.forEach(a => {
         const p = a.promedio;
-        if (p < 5)       rangos["0–4.9"]++;
-        else if (p < 6)  rangos["5"]++;
-        else if (p < 7)  rangos["6–6.9"]++;
-        else if (p < 8)  rangos["7–7.9"]++;
-        else if (p < 9)  rangos["8–8.9"]++;
-        else             rangos["9–10"]++;
+        if      (p < 5) rangos["0–4.9"]++;
+        else if (p < 6) rangos["5"]++;
+        else if (p < 7) rangos["6–6.9"]++;
+        else if (p < 8) rangos["7–7.9"]++;
+        else if (p < 9) rangos["8–8.9"]++;
+        else            rangos["9–10"]++;
       });
       graficas["dist"] = new Chart(document.getElementById("graficaDistribucion"), {
         type: "bar",
@@ -495,13 +776,13 @@ Pedro López,6,6,5,7</code>
           datasets: [{
             label: "Alumnos",
             data: Object.values(rangos),
-            backgroundColor: ["#c62828","#e53935","#fb8c00","#43a047","#1e88e5","#00897b"]
+            backgroundColor: ["#d63031","#e17055","#fdcb6e","#00b894","#0984e3","#6c5ce7"],
+            borderRadius: 6
           }]
         },
-        options: { responsive: true, plugins: { legend: { display: false } } }
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
       });
 
-      // Aprobados vs Reprobados
       destruirGrafica("apro");
       const aprobados  = datos.filter(a => a.promedio >= 6).length;
       const reprobados = datos.length - aprobados;
@@ -509,15 +790,11 @@ Pedro López,6,6,5,7</code>
         type: "doughnut",
         data: {
           labels: ["Aprobados", "Reprobados"],
-          datasets: [{
-            data: [aprobados, reprobados],
-            backgroundColor: ["#2e7d32", "#c62828"]
-          }]
+          datasets: [{ data: [aprobados, reprobados], backgroundColor: ["#00b894","#d63031"], borderWidth: 0 }]
         },
-        options: { responsive: true }
+        options: { responsive: true, plugins: { legend: { position: "bottom" } }, cutout: "65%" }
       });
 
-      // Promedio por materia
       destruirGrafica("mat");
       const promediosMat = materias.map(mat => {
         const vals = datos.map(a => a.materias[mat]).filter(v => v !== null && v !== undefined);
@@ -530,27 +807,24 @@ Pedro López,6,6,5,7</code>
           datasets: [{
             label: "Promedio",
             data: promediosMat.map(v => parseFloat(v.toFixed(2))),
-            backgroundColor: "#6b0f1a"
+            backgroundColor: "#6b0f1a",
+            borderRadius: 6
           }]
         },
-        options: {
-          responsive: true,
-          scales: { y: { min: 0, max: 10 } },
-          plugins: { legend: { display: false } }
-        }
+        options: { responsive: true, scales: { y: { min: 0, max: 10 } }, plugins: { legend: { display: false } } }
       });
 
-      // Top 5 alumnos
       destruirGrafica("top5");
       const top5 = [...datos].sort((a,b) => b.promedio - a.promedio).slice(0, 5);
       graficas["top5"] = new Chart(document.getElementById("graficaTop5"), {
         type: "bar",
         data: {
-          labels: top5.map(a => a.nombre.split(" ")[0]),  // primer nombre para que quepa
+          labels: top5.map(a => a.nombre.split(" ")[0]),
           datasets: [{
             label: "Promedio",
             data: top5.map(a => parseFloat(a.promedio.toFixed(2))),
-            backgroundColor: "#1565c0"
+            backgroundColor: ["#0984e3","#6c5ce7","#00b894","#e67e22","#d63031"],
+            borderRadius: 6
           }]
         },
         options: {
@@ -558,11 +832,7 @@ Pedro López,6,6,5,7</code>
           scales: { y: { min: 0, max: 10 } },
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: {
-                title: (items) => top5[items[0].dataIndex].nombre
-              }
-            }
+            tooltip: { callbacks: { title: (items) => top5[items[0].dataIndex].nombre } }
           }
         }
       });
@@ -580,12 +850,8 @@ Pedro López,6,6,5,7</code>
         const apro = vals.filter(v => v >= 6).length;
         const repr = vals.length - apro;
         html += `<tr>
-          <td>${mat}</td>
-          <td>${prom.toFixed(2)}</td>
-          <td>${max}</td>
-          <td>${min}</td>
-          <td class="aprobado">${apro}</td>
-          <td class="reprobado">${repr}</td>
+          <td>${mat}</td><td>${prom.toFixed(2)}</td><td>${max}</td><td>${min}</td>
+          <td class="aprobado">${apro}</td><td class="reprobado">${repr}</td>
         </tr>`;
       });
       html += "</tbody></table>";
@@ -602,8 +868,7 @@ Pedro López,6,6,5,7</code>
       datos.forEach((a, i) => {
         const aprobado = a.promedio >= 6;
         html += `<tr>
-          <td>${i+1}</td>
-          <td>${a.nombre}</td>
+          <td>${i+1}</td><td>${a.nombre}</td>
           ${datos.some(x => x.grupo) ? `<td>${a.grupo}</td>` : ""}
           ${materias.map(m => {
             const v = a.materias[m];
@@ -611,7 +876,7 @@ Pedro López,6,6,5,7</code>
             return `<td class="${v < 6 ? 'reprobado' : ''}">${v}</td>`;
           }).join("")}
           <td><strong>${a.promedio.toFixed(2)}</strong></td>
-          <td class="${aprobado ? 'aprobado' : 'reprobado'}">${aprobado ? "Aprobado" : "Reprobado"}</td>
+          <td class="${aprobado ? 'aprobado' : 'reprobado'}">${aprobado ? "✓ Aprobado" : "✗ Reprobado"}</td>
         </tr>`;
       });
       html += "</tbody></table>";
@@ -646,19 +911,13 @@ Pedro López,6,6,5,7</code>
       const reprobados = total - aprobados;
       const promGen    = total > 0 ? datosOriginales.reduce((s,a) => s+a.promedio, 0) / total : 0;
 
-      let txt = `REPORTE DE ESTADÍSTICAS DE CALIFICACIONES\n`;
-      txt    += `CBTis No. 179\n`;
+      let txt = `REPORTE DE ESTADÍSTICAS DE CALIFICACIONES\nCBTis No. 179\n`;
       txt    += `Fecha: ${new Date().toLocaleDateString("es-MX", {year:"numeric",month:"long",day:"numeric"})}\n\n`;
-      txt    += `─────────────────────────────────────────\n`;
-      txt    += `RESUMEN GENERAL\n`;
-      txt    += `─────────────────────────────────────────\n`;
-      txt    += `Total de alumnos : ${total}\n`;
-      txt    += `Promedio general : ${promGen.toFixed(2)}\n`;
+      txt    += `─────────────────────────────────────────\nRESUMEN GENERAL\n─────────────────────────────────────────\n`;
+      txt    += `Total de alumnos : ${total}\nPromedio general : ${promGen.toFixed(2)}\n`;
       txt    += `Aprobados        : ${aprobados} (${(aprobados/total*100).toFixed(1)}%)\n`;
       txt    += `Reprobados       : ${reprobados} (${(reprobados/total*100).toFixed(1)}%)\n\n`;
-      txt    += `─────────────────────────────────────────\n`;
-      txt    += `ESTADÍSTICAS POR MATERIA\n`;
-      txt    += `─────────────────────────────────────────\n`;
+      txt    += `─────────────────────────────────────────\nESTADÍSTICAS POR MATERIA\n─────────────────────────────────────────\n`;
       materias.forEach(mat => {
         const vals = datosOriginales.map(a => a.materias[mat]).filter(v => v !== null && v !== undefined);
         if (vals.length === 0) return;
@@ -677,9 +936,7 @@ Pedro López,6,6,5,7</code>
       URL.revokeObjectURL(a.href);
     }
 
-    function imprimirPagina() {
-      window.print();
-    }
+    function imprimirPagina() { window.print(); }
   </script>
 </body>
 </html>
